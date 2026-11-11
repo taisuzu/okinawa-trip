@@ -10,19 +10,21 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=DM+Mono:wght@400;500&family=Yellowtail&display=swap">
 <style>
-/* レイアウト: 1冊の小冊子。ページを右から左へめくる。紙面は昼夜共通、机（背景）だけテーマで変える */
+/* レイアウト: 海の光がゆらぐ机の上に1冊の小冊子。ページを開くたびに中身が順番に浮かび上がる */
 :root{
-  --desk:#DCE7E5;
-  --desk-fg:#3D5655;
+  --desk:#CFE3E1;
+  --desk-2:#A9D6D3;
+  --desk-3:#F6D9C9;
+  --desk-fg:#2F4E4D;
   --paper:#FBFCFB;
   --paper-back:#EEF2F1;
   --ink:#16302F;
   --muted:#5E7473;
   --line:#D9E4E2;
   --sea:#0B6F78;
-  --sea-deep:#084950;
+  --sea-deep:#073F45;
   --sea-soft:#DDEFEE;
   --coral:#D24D6B;
   --coral-soft:#FBE6EB;
@@ -30,11 +32,12 @@
   --font-display:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Hiragino Sans",sans-serif;
   --font-body:"Zen Kaku Gothic New","Hiragino Sans","Noto Sans JP",sans-serif;
   --font-mono:"DM Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  --font-script:"Yellowtail","Snell Roundhand",cursive;
 }
 @media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){--desk:#0D1B1D;--desk-fg:#9DB7B5;--paper:#F4F6F4;--paper-back:#DCE3E1;color-scheme:dark}
+  :root:not([data-theme="light"]){--desk:#081517;--desk-2:#0E4448;--desk-3:#3A1F2A;--desk-fg:#A6C4C2;--paper:#F4F6F4;--paper-back:#DCE3E1;color-scheme:dark}
 }
-:root[data-theme="dark"]{--desk:#0D1B1D;--desk-fg:#9DB7B5;--paper:#F4F6F4;--paper-back:#DCE3E1;color-scheme:dark}
+:root[data-theme="dark"]{--desk:#081517;--desk-2:#0E4448;--desk-3:#3A1F2A;--desk-fg:#A6C4C2;--paper:#F4F6F4;--paper-back:#DCE3E1;color-scheme:dark}
 
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -43,91 +46,174 @@ h1,h2,h3,h4{font-family:var(--font-display);text-wrap:balance;margin:0;line-heig
 a{color:var(--sea)}
 button{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--coral);outline-offset:2px;border-radius:6px}
-.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
 
-/* 机と本 */
-.app{height:100%;display:flex;flex-direction:column;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px 10px}
-.stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;perspective:2200px}
-.book{position:relative;width:min(100%,460px,calc((100vh - 110px) * 0.68));height:100%;max-height:720px}
-.leaf{position:absolute;inset:0;transform-origin:left center;transform-style:preserve-3d;transition:transform .8s cubic-bezier(.45,.05,.25,1)}
+/* ===== 机：ゆらぐ光と泡 ===== */
+.ambient{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+.blob{position:absolute;border-radius:50%;filter:blur(60px);opacity:.75;will-change:transform}
+.blob.b1{width:60vmax;height:60vmax;background:var(--desk-2);left:-20vmax;top:-20vmax;animation:drift1 18s ease-in-out infinite alternate}
+.blob.b2{width:50vmax;height:50vmax;background:var(--desk-3);right:-18vmax;bottom:-18vmax;animation:drift2 22s ease-in-out infinite alternate}
+.blob.b3{width:34vmax;height:34vmax;background:var(--desk-2);right:-10vmax;top:20vh;opacity:.5;animation:drift1 26s ease-in-out infinite alternate-reverse}
+@keyframes drift1{to{transform:translate(14vmax,10vmax) scale(1.15)}}
+@keyframes drift2{to{transform:translate(-12vmax,-14vmax) scale(.9)}}
+.caustic{position:absolute;inset:-50%;background:repeating-radial-gradient(circle at 30% 40%,rgba(255,255,255,.0) 0 22px,rgba(255,255,255,.10) 24px,rgba(255,255,255,0) 30px);animation:caustic 30s linear infinite;mix-blend-mode:soft-light}
+@keyframes caustic{to{transform:rotate(360deg)}}
+.bubble{position:absolute;bottom:-40px;border-radius:50%;border:1px solid rgba(255,255,255,.55);background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.6),rgba(255,255,255,.05) 60%);animation:rise linear infinite}
+@keyframes rise{0%{transform:translate(0,0);opacity:0}10%{opacity:.9}100%{transform:translate(var(--sway),-110vh);opacity:0}}
+
+/* ===== 本 ===== */
+.app{position:relative;z-index:1;height:100%;display:flex;flex-direction:column;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px 8px}
+.stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;perspective:2000px}
+.book{position:relative;width:min(100%,460px,calc((100vh - 120px) * 0.68));height:100%;max-height:720px;animation:bookIn 1.1s cubic-bezier(.2,.9,.25,1.2) both}
+@keyframes bookIn{from{transform:translateY(40px) rotateX(18deg) scale(.92);opacity:0}}
+.leaf{position:absolute;inset:0;transform-origin:left center;transform-style:preserve-3d;transition:transform 1s cubic-bezier(.55,.05,.2,1)}
 .leaf.flipped{transform:rotateY(-178deg)}
-.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:4px 12px 12px 4px;overflow:hidden}
-.back{transform:rotateY(180deg);background:var(--paper-back);border-radius:12px 4px 4px 12px;box-shadow:inset -18px 0 24px -16px rgba(0,0,0,.18)}
-.front{background:var(--paper);box-shadow:0 1px 2px rgba(10,40,40,.08),0 12px 30px -10px rgba(10,40,40,.28);display:flex;flex-direction:column}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:4px 14px 14px 4px;overflow:hidden}
+.back{transform:rotateY(180deg);background:var(--paper-back);border-radius:14px 4px 4px 14px;box-shadow:inset -18px 0 24px -16px rgba(0,0,0,.18)}
+.front{background:var(--paper);box-shadow:0 1px 2px rgba(10,40,40,.08),0 18px 40px -12px rgba(10,40,40,.35);display:flex;flex-direction:column}
 .front::before{content:"";position:absolute;left:0;top:0;bottom:0;width:22px;background:linear-gradient(90deg,rgba(0,0,0,.10),rgba(0,0,0,0));pointer-events:none;z-index:2}
-/* 静止中のページは3Dを外す（iOS Safariは3D要素の中だとスクロールできないため） */
+/* めくり中の陰影とツヤ */
+.front::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:6;opacity:0;background:linear-gradient(100deg,rgba(255,255,255,0) 20%,rgba(255,255,255,.55) 45%,rgba(0,0,0,.18) 70%,rgba(0,0,0,.35))}
+.leaf.turn-f .front::after{animation:shade 1s ease-in both}
+.leaf.turn-b .front::after{animation:shade 1s ease-out reverse both}
+@keyframes shade{0%{opacity:0;background-position:0 0}60%{opacity:1}100%{opacity:1}}
+/* 静止中は3Dを外す（iOS Safariのスクロール対策） */
 .leaf.rest{transform-style:flat}
 .leaf.rest .front{backface-visibility:visible;-webkit-backface-visibility:visible}
 .leaf.rest .back{display:none}
+
 .scroll{flex:1;min-height:0;overflow-y:auto;padding:26px 22px 14px 30px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:pan-y}
-/* 続きがあるときの目印 */
-.more{position:absolute;left:0;right:0;bottom:30px;height:46px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;background:linear-gradient(rgba(251,252,251,0),var(--paper) 75%);font-size:11px;color:var(--sea);letter-spacing:.1em;pointer-events:none;opacity:0;transition:opacity .2s;z-index:3}
-.more.show{opacity:1}
 .folio{flex:0 0 auto;text-align:center;font-family:var(--font-mono);font-size:11px;color:var(--muted);padding:6px 0 12px;letter-spacing:.2em}
-/* 紙の方眼 */
 .paper-grid{background-image:radial-gradient(circle,var(--line) 1px,transparent 1.2px);background-size:18px 18px;background-position:9px 9px}
+.more{position:absolute;left:0;right:0;bottom:30px;height:50px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;background:linear-gradient(rgba(251,252,251,0),var(--paper) 75%);font-size:11px;color:var(--sea);letter-spacing:.1em;pointer-events:none;opacity:0;transition:opacity .3s;z-index:3}
+.more.show{opacity:1}
+.more span{animation:nudge 1.4s ease-in-out infinite}
+@keyframes nudge{50%{transform:translateY(3px)}}
 
 /* しおり紐 */
-.ribbon{position:absolute;top:-6px;right:34px;width:14px;height:64px;background:var(--coral);z-index:500;clip-path:polygon(0 0,100% 0,100% 100%,50% 82%,0 100%);box-shadow:0 2px 4px rgba(0,0,0,.2);pointer-events:none}
+.ribbon{position:absolute;top:-8px;right:34px;width:14px;height:70px;background:linear-gradient(90deg,#B83A57,var(--coral) 40%,#E46F89);z-index:500;clip-path:polygon(0 0,100% 0,100% 100%,50% 82%,0 100%);transform-origin:top center;animation:sway 3.6s ease-in-out infinite;pointer-events:none;filter:drop-shadow(0 2px 2px rgba(0,0,0,.25))}
+@keyframes sway{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(4deg)}}
 
 /* 操作バー */
-.bar{flex:0 0 auto;display:flex;align-items:center;justify-content:center;gap:16px;padding-top:10px;color:var(--desk-fg)}
-.bar button{width:44px;height:44px;border-radius:50%;border:1px solid currentColor;background:transparent;cursor:pointer;font-size:18px;display:grid;place-items:center}
+.bar{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:6px;padding-top:10px;color:var(--desk-fg)}
+.bar .row{display:flex;align-items:center;gap:16px}
+.bar button{width:44px;height:44px;border-radius:50%;border:1px solid currentColor;background:rgba(255,255,255,.15);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);cursor:pointer;font-size:18px;display:grid;place-items:center;transition:transform .2s,background .2s}
+.bar button:not(:disabled):active{transform:scale(.9)}
+.bar button:not(:disabled):hover{background:rgba(255,255,255,.35)}
 .bar button:disabled{opacity:.3;cursor:default}
 .bar .count{font-family:var(--font-mono);font-size:13px;min-width:64px;text-align:center;letter-spacing:.08em}
+.dots{display:flex;gap:5px}
+.dots i{width:6px;height:6px;border-radius:3px;background:currentColor;opacity:.25;transition:width .4s cubic-bezier(.2,.9,.3,1.3),opacity .3s}
+.dots i.on{width:18px;opacity:.9;background:var(--coral)}
 
 /* ===== 表紙 ===== */
-.cover .front{background:var(--sea-deep);color:#F2F7F6}
+.cover .front{background:radial-gradient(120% 80% at 70% 20%,#0E5E66,var(--sea-deep) 70%);color:#F2F7F6}
 .cover .front::before{background:linear-gradient(90deg,rgba(0,0,0,.35),rgba(0,0,0,0))}
-.cover-in{position:relative;height:100%;padding:34px 28px 28px 38px;display:flex;flex-direction:column}
+.sheen{position:absolute;inset:0;pointer-events:none;z-index:5;background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.16) 48%,rgba(255,255,255,.04) 52%,transparent 65%);background-size:250% 100%;animation:sheen 5.5s ease-in-out 1.8s infinite}
+@keyframes sheen{0%{background-position:130% 0}45%,100%{background-position:-30% 0}}
+.cover-in{position:relative;height:100%;padding:34px 28px 26px 38px;display:flex;flex-direction:column}
 .cover .kicker{font-family:var(--font-mono);font-size:11px;letter-spacing:.3em;color:#9FD6D8}
-.cover h1{font-size:clamp(46px,15vw,72px);font-weight:900;margin-top:18px;line-height:1.05;letter-spacing:.04em}
-.cover h1 small{display:block;font-size:.36em;font-weight:700;letter-spacing:.3em;margin-top:14px;color:#CDE9E8}
-.cover .dates{font-family:var(--font-mono);font-size:15px;margin-top:20px;color:#CDE9E8}
-.cover .art{flex:1;min-height:80px;display:flex;align-items:flex-end}
-.cover .art svg{width:100%;height:auto;max-height:100%}
-.cover .for{display:flex;justify-content:space-between;align-items:flex-end;margin-top:14px;font-size:12px;color:#9FD6D8}
-.cover .for b{font-family:var(--font-display);font-size:17px;color:#F5B3C2;font-weight:700}
-.cover .hint{font-size:11px;letter-spacing:.1em}
+.cover h1{font-size:clamp(50px,16vw,76px);font-weight:900;margin-top:16px;line-height:1.05;letter-spacing:.04em;display:flex}
+.cover h1 .ch{display:inline-block}
+.cover .sub{font-family:var(--font-display);font-size:clamp(17px,5vw,24px);font-weight:700;letter-spacing:.3em;margin-top:12px;color:#CDE9E8;display:flex}
+.cover .sub span{display:inline-block}
+.cover .dates{font-family:var(--font-mono);font-size:14px;margin-top:18px;color:#CDE9E8;overflow:hidden;white-space:nowrap}
+.cover .art{flex:1;min-height:90px;display:flex;align-items:flex-end;margin-inline:-38px -28px}
+.cover .art svg{width:100%;height:auto;max-height:100%;display:block}
+.cover .for{display:flex;justify-content:space-between;align-items:flex-end;margin-top:12px}
+.script{font-family:var(--font-script);font-size:30px;line-height:1;background:linear-gradient(90deg,#F5B3C2,#FFE3A3,#F5B3C2,#FFE3A3);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:foil 4s linear infinite}
+@keyframes foil{to{background-position:-300% 0}}
+.cover .hint{font-size:11px;letter-spacing:.12em;color:#9FD6D8;display:flex;align-items:center;gap:6px}
+.cover .hint b{display:inline-block;animation:poke 1.3s ease-in-out infinite;font-weight:400}
+@keyframes poke{50%{transform:translateX(5px)}}
+.corner{position:absolute;right:0;bottom:0;width:46px;height:46px;z-index:7;pointer-events:none;background:linear-gradient(135deg,transparent 50%,#E9EFEE 50%,#FFFFFF 75%);box-shadow:-3px -3px 8px rgba(0,0,0,.25);border-top-left-radius:6px;transform-origin:100% 100%;animation:peel 2.4s ease-in-out infinite}
+@keyframes peel{0%,100%{transform:scale(.55)}50%{transform:scale(1)}}
+
+/* 表紙の入場（.play のときだけ） */
+.leaf.play .cover-in .kicker{animation:fadeUp .8s .2s both}
+.leaf.play .cover h1 .ch{animation:dropIn .9s cubic-bezier(.2,.9,.25,1.3) both;animation-delay:calc(.35s + var(--i)*.14s)}
+.leaf.play .cover .sub span{animation:fadeUp .6s both;animation-delay:calc(.8s + var(--i)*.07s)}
+.leaf.play .cover .dates{animation:type 1.1s steps(28) 1.3s both}
+.leaf.play .cover .for{animation:fadeUp .8s 1.6s both}
+@keyframes dropIn{from{transform:translateY(-40px) scale(1.3);opacity:0;filter:blur(8px)}}
+@keyframes fadeUp{from{transform:translateY(14px);opacity:0}}
+@keyframes type{from{max-width:0}to{max-width:100%}}
+/* 表紙のイラスト */
+.sun{animation:sunrise 2.2s cubic-bezier(.2,.8,.2,1) .3s both}
+@keyframes sunrise{from{transform:translateY(48px)}}
+.glow{transform-origin:215px 92px;transform-box:view-box;animation:glow 3.5s ease-in-out infinite}
+@keyframes glow{50%{transform:scale(1.18);opacity:.55}}
+.wv{animation:wave linear infinite}
+.wv1{animation-duration:6s}.wv2{animation-duration:9s;animation-direction:reverse}.wv3{animation-duration:12s}
+@keyframes wave{to{transform:translateX(-50px)}}
+.tw{animation:twinkle 2s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes twinkle{0%,100%{opacity:0;transform:scale(.3)}50%{opacity:1;transform:scale(1)}}
+.boat{transform-box:fill-box;transform-origin:50% 100%;animation:bob 3s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-2px) rotate(3deg)}}
+.refl{transform-box:fill-box;transform-origin:center;animation:refl 2.2s ease-in-out infinite}
+@keyframes refl{50%{transform:scaleX(.6);opacity:.3}}
+.bird{animation:fly 14s linear infinite}
+@keyframes fly{from{transform:translate(-40px,0)}to{transform:translate(340px,-20px)}}
 
 /* ===== 裏表紙 ===== */
-.backcover .front{background:var(--sea-deep);color:#F2F7F6;align-items:center;justify-content:center;text-align:center}
-.backcover .msg{font-family:var(--font-display);font-size:30px;color:#F5B3C2;font-weight:900}
-.backcover p{color:#CDE9E8;font-size:13px;margin:10px 0 0}
+.backcover .front{background:radial-gradient(100% 70% at 50% 40%,#0E5E66,var(--sea-deep) 75%);color:#F2F7F6;align-items:center;justify-content:center;text-align:center}
+.bd-text{font-family:var(--font-script);font-size:clamp(44px,13vw,60px);line-height:1.1;display:flex;flex-wrap:wrap;justify-content:center;gap:0 .25em}
+.bd-text .w{display:flex}
+.bd-text .l{display:inline-block;background:linear-gradient(180deg,#FFE3A3,#F5B3C2);-webkit-background-clip:text;background-clip:text;color:transparent;animation:wave-l 2.4s ease-in-out infinite;animation-delay:calc(var(--i)*.08s)}
+@keyframes wave-l{0%,100%{transform:translateY(0)}25%{transform:translateY(-8px) rotate(-4deg)}50%{transform:translateY(0)}}
+.backcover p{color:#CDE9E8;font-size:13px;margin:16px 0 0;letter-spacing:.1em}
+.again{margin-top:22px;background:none;border:1px solid rgba(255,255,255,.5);color:#F2F7F6;border-radius:999px;padding:7px 16px;font-size:12px;cursor:pointer;letter-spacing:.1em}
+.balloon{position:absolute;bottom:-90px;width:34px;height:42px;border-radius:50% 50% 48% 48%;opacity:.85;animation:float 9s ease-in infinite}
+.balloon::after{content:"";position:absolute;left:50%;top:100%;width:1px;height:46px;background:rgba(255,255,255,.4)}
+@keyframes float{0%{transform:translate(0,0) rotate(-4deg);opacity:0}10%{opacity:.85}100%{transform:translate(var(--sway),-900px) rotate(6deg);opacity:0}}
 
-/* ===== 本文共通 ===== */
+/* ===== 本文 ===== */
 .eyebrow{font-family:var(--font-mono);font-size:11px;letter-spacing:.2em;color:var(--sea);text-transform:uppercase}
 .ptitle{font-size:22px;font-weight:900;margin-top:4px}
 .psub{font-size:12.5px;color:var(--muted)}
 .dayhead{display:flex;align-items:flex-end;gap:12px}
-.dayhead .num{font-family:var(--font-mono);font-size:40px;line-height:.9;color:var(--sea)}
-.dayhead .num small{display:block;font-size:10px;letter-spacing:.16em;color:var(--muted);margin-bottom:6px}
-.pill{display:inline-block;font-size:11.5px;padding:1px 10px;border-radius:999px;background:var(--sea-soft);color:var(--sea);margin-top:8px}
+.dayhead .num{font-family:var(--font-mono);font-size:42px;line-height:.9;color:var(--sea);background:linear-gradient(120deg,var(--sea),#3FB6BC,var(--sea));background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:foil 5s linear infinite}
+.dayhead .num.bd{background-image:linear-gradient(120deg,var(--coral),var(--sand),var(--coral))}
+.dayhead .num small{display:block;font-size:10px;letter-spacing:.16em;color:var(--muted);-webkit-text-fill-color:var(--muted);margin-bottom:6px}
+.pill{position:relative;overflow:hidden;display:inline-block;font-size:11.5px;padding:1px 10px;border-radius:999px;background:var(--sea-soft);color:var(--sea);margin-top:8px}
 .pill.bd{background:var(--coral-soft);color:var(--coral)}
+.pill::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.8) 50%,transparent 70%);transform:translateX(-100%);animation:shine 3s ease-in-out 1s infinite}
+@keyframes shine{40%,100%{transform:translateX(100%)}}
+
+/* 順番に浮かび上がる（静止状態は表示されたまま） */
+.leaf.play .rv{animation:reveal .75s cubic-bezier(.2,.85,.25,1) both;animation-delay:calc(.25s + var(--d,0)*.07s)}
+@keyframes reveal{from{opacity:0;transform:translateY(18px) scale(.98);filter:blur(4px)}}
 
 /* もくじ */
 .toc{list-style:none;margin:18px 0 0;padding:0}
 .toc li{border-bottom:1px dashed var(--line)}
-.toc button{width:100%;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:baseline;background:none;border:0;padding:11px 2px;text-align:left;cursor:pointer}
+.toc button{width:100%;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:baseline;background:none;border:0;padding:11px 2px;text-align:left;cursor:pointer;transition:transform .25s,color .25s}
+.toc button:hover{transform:translateX(6px);color:var(--sea)}
 .toc b{font-family:var(--font-display);font-size:15.5px}
 .toc span{font-size:12px;color:var(--muted);display:block;font-weight:400}
 .toc em{font-style:normal;font-family:var(--font-mono);font-size:12px;color:var(--sea)}
 .facts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:20px}
 .fact{border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--paper)}
-.fact b{display:block;font-family:var(--font-mono);font-weight:500;font-size:16px}
+.fact b{display:block;font-family:var(--font-mono);font-weight:500;font-size:16px;font-variant-numeric:tabular-nums}
 .fact span{font-size:10.5px;color:var(--muted)}
 
-/* 搭乗券 */
-.passes{display:grid;gap:12px;margin-top:16px}
-.pass{display:grid;grid-template-columns:1fr auto;background:var(--paper);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+/* フライト */
+.sky{position:relative;margin-top:10px;height:84px}
+.sky svg{width:100%;height:100%;overflow:visible}
+.sky .arc{stroke-dasharray:4 6;animation:dash 1.2s linear infinite}
+@keyframes dash{to{stroke-dashoffset:-20}}
+.passes{display:grid;gap:12px;margin-top:6px}
+.pass{display:grid;grid-template-columns:1fr auto;background:var(--paper);border:1px solid var(--line);border-radius:12px;overflow:hidden;position:relative}
+.pass::before{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgba(11,111,120,.07) 50%,transparent 70%);transform:translateX(-100%);animation:shine 4s ease-in-out infinite}
+.pass:nth-child(2)::before{animation-delay:2s}
 .pass .main{padding:12px 14px;min-width:0}
 .pass .stub{padding:12px;border-left:2px dashed var(--line);display:flex;flex-direction:column;justify-content:center;align-items:center;min-width:76px;text-align:center}
 .pass .tag{font-size:10.5px;letter-spacing:.12em;color:var(--muted)}
 .route{display:flex;align-items:center;gap:8px;margin-top:4px}
 .route .ap{font-family:var(--font-mono);font-size:25px;font-weight:500;line-height:1}
 .route .ap small{display:block;font-family:var(--font-body);font-size:10.5px;color:var(--muted);margin-top:4px}
-.route .arrow{flex:1;height:1px;background:var(--line);position:relative;min-width:18px}
-.route .arrow::after{content:"✈";position:absolute;right:-2px;top:-11px;font-size:13px;color:var(--sea)}
+.route .arrow{flex:1;height:1px;background:repeating-linear-gradient(90deg,var(--line) 0 4px,transparent 4px 8px);position:relative;min-width:18px}
+.route .arrow::after{content:"✈";position:absolute;left:0;top:-11px;font-size:13px;color:var(--sea);animation:taxi 2.6s ease-in-out infinite}
+@keyframes taxi{0%{left:0;opacity:0}15%{opacity:1}85%{opacity:1}100%{left:calc(100% - 12px);opacity:0}}
 .times{display:flex;justify-content:space-between;margin-top:8px;font-family:var(--font-mono);font-size:14px}
 .stub .d{font-family:var(--font-mono);font-size:19px;line-height:1.1}
 .stub .w{font-size:10.5px;color:var(--muted)}
@@ -136,76 +222,122 @@ button{font:inherit;color:inherit}
 
 /* タイムライン */
 .tl{list-style:none;margin:16px 0 0;padding:0;position:relative}
-.tl::before{content:"";position:absolute;left:50px;top:6px;bottom:6px;width:2px;background:var(--line)}
+.tl::before{content:"";position:absolute;left:50px;top:6px;bottom:6px;width:2px;background:linear-gradient(var(--sea),var(--sea-soft));transform-origin:top}
+.leaf.play .tl::before{animation:draw 1.4s cubic-bezier(.3,.8,.3,1) .3s both}
+@keyframes draw{from{transform:scaleY(0)}}
 .tl li{display:grid;grid-template-columns:40px 1fr;gap:20px;padding-bottom:14px;position:relative}
-.tl time{font-family:var(--font-mono);font-size:13px;text-align:right;padding-top:1px}
+.tl time{font-family:var(--font-mono);font-size:13px;text-align:right;padding-top:1px;font-variant-numeric:tabular-nums}
 .tl li::after{content:"";position:absolute;left:46px;top:7px;width:10px;height:10px;border-radius:50%;background:var(--paper);border:2px solid var(--sea)}
+.leaf.play .tl li::after{animation:pop .55s cubic-bezier(.2,.9,.3,1.6) both;animation-delay:calc(.35s + var(--d,0)*.07s)}
+@keyframes pop{from{transform:scale(0)}}
 .tl li.key::after{background:var(--sea)}
-.tl li.bd::after{background:var(--coral);border-color:var(--coral)}
-.tl li.choice::after{border-color:var(--sand);background:var(--sand)}
+.tl li.bd::after{background:var(--coral);border-color:var(--coral);box-shadow:0 0 0 0 var(--coral);animation:ping 1.8s ease-out infinite}
+.tl li.choice::after{border-color:var(--sand);background:var(--sand);animation:ping-s 1.8s ease-out infinite}
+.leaf.play .tl li.bd::after{animation:pop .55s cubic-bezier(.2,.9,.3,1.6) calc(.35s + var(--d,0)*.07s) both,ping 1.8s ease-out 1.5s infinite}
+.leaf.play .tl li.choice::after{animation:pop .55s cubic-bezier(.2,.9,.3,1.6) calc(.35s + var(--d,0)*.07s) both,ping-s 1.8s ease-out 1.5s infinite}
+@keyframes ping{0%{box-shadow:0 0 0 0 rgba(210,77,107,.55)}100%{box-shadow:0 0 0 10px rgba(210,77,107,0)}}
+@keyframes ping-s{0%{box-shadow:0 0 0 0 rgba(226,185,94,.7)}100%{box-shadow:0 0 0 10px rgba(226,185,94,0)}}
 .tl .body{min-width:0}
 .tl h3{font-size:15px;font-weight:700}
 .tl p{margin:1px 0 0;color:var(--muted);font-size:12.5px}
 .meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:5px}
-.chip{font-size:11px;padding:1px 8px;border-radius:6px;border:1px solid var(--line);color:var(--muted);text-decoration:none;white-space:nowrap}
+.chip{font-size:11px;padding:1px 8px;border-radius:6px;border:1px solid var(--line);color:var(--muted);text-decoration:none;white-space:nowrap;transition:transform .2s}
 a.chip{color:var(--sea);border-color:var(--sea-soft);background:var(--sea-soft)}
-.chip.gold{border-color:var(--sand);color:var(--ink);background:#FBF3DF}
+a.chip:hover{transform:translateY(-2px)}
 .jump{background:none;border:0;padding:0;color:var(--sea);text-decoration:underline;cursor:pointer;font-size:12.5px}
 
-/* えらぶページ */
+/* 2日目の飾り */
+.confetti-bg{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0}
+.confetti-bg i{position:absolute;top:-12px;width:6px;height:10px;border-radius:2px;opacity:.55;animation:fall linear infinite}
+@keyframes fall{to{transform:translate(var(--sway),110vh) rotate(720deg)}}
+.scroll>*{position:relative;z-index:1}
+
+/* えらぶ */
 .pick-lead{font-size:13px;color:var(--muted);margin-top:8px}
 .cards{display:grid;gap:10px;margin-top:14px}
-.card{position:relative;border:1.5px solid var(--line);border-radius:14px;padding:12px 14px 12px 14px;background:var(--paper);transition:border-color .2s,background .2s}
-.card.on{border-color:var(--coral);background:var(--coral-soft)}
+.card{position:relative;border:1.5px solid var(--line);border-radius:14px;padding:12px 14px;background:var(--paper);transition:border-color .3s,background .3s,transform .3s,box-shadow .3s}
+.card:hover{transform:translateY(-2px);box-shadow:0 8px 20px -10px rgba(11,111,120,.35)}
+.card.on{border-color:var(--coral);background:var(--coral-soft);box-shadow:0 10px 24px -12px rgba(210,77,107,.6)}
+.card.boom{animation:boom .6s cubic-bezier(.2,.9,.3,1.5)}
+@keyframes boom{30%{transform:scale(1.04) rotate(-.6deg)}60%{transform:scale(.99) rotate(.3deg)}}
 .card .letter{font-family:var(--font-mono);font-size:11px;color:var(--sea);letter-spacing:.12em}
 .card h4{font-size:16.5px;font-weight:700;margin-top:2px}
 .card p{margin:4px 0 0;font-size:12.5px;color:var(--muted)}
 .card .row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
-.btn{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;padding:6px 12px;border-radius:999px;text-decoration:none;cursor:pointer;border:1px solid var(--sea);color:var(--sea);background:transparent}
+.btn{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;padding:6px 12px;border-radius:999px;text-decoration:none;cursor:pointer;border:1px solid var(--sea);color:var(--sea);background:transparent;transition:transform .15s,background .3s,color .3s}
+.btn:active{transform:scale(.94)}
 .btn.pick{border-color:var(--coral);color:var(--coral)}
 .card.on .btn.pick{background:var(--coral);color:#fff}
-.picked{margin-top:14px;font-size:13px;text-align:center;min-height:1.7em;color:var(--coral);font-family:var(--font-display);font-weight:700}
+.card .heart{position:absolute;right:14px;top:10px;font-size:20px;color:var(--coral);opacity:0;transform:scale(0)}
+.card.on .heart{opacity:1;transform:scale(1);animation:heart 1.2s ease-in-out infinite}
+@keyframes heart{0%,100%{transform:scale(1)}15%{transform:scale(1.25)}30%{transform:scale(1)}45%{transform:scale(1.15)}}
+.picked{margin-top:14px;font-size:14px;text-align:center;min-height:1.7em;color:var(--coral);font-family:var(--font-display);font-weight:700}
+.picked.pop{animation:dropIn .6s cubic-bezier(.2,.9,.3,1.4)}
 
 /* 持ち物 */
 .check{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;margin-top:12px}
 .check div{display:flex;align-items:center;gap:8px;min-width:0}
-.check input{width:18px;height:18px;accent-color:var(--sea);flex:0 0 auto}
-.check label{font-size:13.5px}
-.check input:checked+label{color:var(--muted);text-decoration:line-through}
+.check input{width:18px;height:18px;accent-color:var(--sea);flex:0 0 auto;transition:transform .2s}
+.check input:checked{animation:pop .4s cubic-bezier(.2,.9,.3,1.8)}
+.check label{font-size:13.5px;position:relative;transition:color .3s}
+.check label::after{content:"";position:absolute;left:0;top:52%;height:1.5px;width:100%;background:var(--muted);transform:scaleX(0);transform-origin:left;transition:transform .35s ease}
+.check input:checked+label{color:var(--muted)}
+.check input:checked+label::after{transform:scaleX(1)}
+.meter{margin-top:12px;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.meter i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--sea),#3FB6BC);transition:width .5s cubic-bezier(.2,.9,.3,1.2)}
 .tips{margin-top:18px}
 .tip{display:grid;grid-template-columns:44px 1fr;gap:8px;font-size:12.5px;padding:8px 0;border-top:1px solid var(--line)}
 .tip span{font-size:10.5px;letter-spacing:.1em;color:var(--muted);padding-top:2px}
 
+#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:1000}
+
 @media (max-width:380px){.scroll{padding:22px 16px 12px 24px}.check{grid-template-columns:1fr}}
-@media (prefers-reduced-motion:reduce){.leaf{transition:none}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
+
+<div class="ambient" aria-hidden="true">
+  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+  <div class="caustic"></div>
+  <div id="bubbles"></div>
+</div>
+<canvas id="fx" aria-hidden="true"></canvas>
 
 <div class="app">
   <div class="stage">
-    <div class="book" id="book" aria-live="polite">
+    <div class="book" id="book">
       <div class="ribbon" aria-hidden="true"></div>
 
       <!-- 0 表紙 -->
       <article class="leaf cover">
         <div class="face front">
+          <div class="sheen"></div>
           <div class="cover-in">
             <div class="kicker">TRAVEL BOOKLET · No.01</div>
-            <h1>沖縄<small>旅のしおり</small></h1>
+            <h1 aria-label="沖縄"><span class="ch" style="--i:0">沖</span><span class="ch" style="--i:1">縄</span></h1>
+            <div class="sub" aria-label="旅のしおり"><span style="--i:0">旅</span><span style="--i:1">の</span><span style="--i:2">し</span><span style="--i:3">お</span><span style="--i:4">り</span></div>
             <div class="dates">2026.11.13 FRI — 11.15 SUN</div>
             <div class="art">
-              <svg viewBox="0 0 300 150" aria-hidden="true">
-                <circle cx="220" cy="62" r="26" fill="#E2B95E"/>
-                <rect x="0" y="80" width="300" height="70" fill="#0B6F78"/>
-                <path d="M0 80 Q 25 72 50 80 T 100 80 T 150 80 T 200 80 T 250 80 T 300 80 V150 H0Z" fill="#0B6F78"/>
-                <path d="M0 98 Q 25 91 50 98 T 100 98 T 150 98 T 200 98 T 250 98 T 300 98" fill="none" stroke="#4FC1C6" stroke-width="2" stroke-linecap="round" opacity=".7"/>
-                <path d="M0 116 Q 25 109 50 116 T 100 116 T 150 116 T 200 116 T 250 116 T 300 116" fill="none" stroke="#4FC1C6" stroke-width="2" stroke-linecap="round" opacity=".45"/>
-                <path d="M180 82 h80" stroke="#E2B95E" stroke-width="2" opacity=".6"/>
-                <path d="M196 90 h48" stroke="#E2B95E" stroke-width="2" opacity=".4"/>
-                <g fill="#F2F7F6"><path d="M40 70 l14 -3 l-3 3 l10 0 l-4 3 h-14z"/></g>
+              <svg viewBox="0 0 300 160" aria-hidden="true" id="coverArt">
+                <defs>
+                  <radialGradient id="g-sun" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#FFE3A3" stop-opacity=".9"/><stop offset="1" stop-color="#FFE3A3" stop-opacity="0"/></radialGradient>
+                  <linearGradient id="g-sea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0F8C93"/><stop offset="1" stop-color="#074A50"/></linearGradient>
+                </defs>
+                <g class="bird"><path d="M0 30 q4 -4 8 0 q4 -4 8 0" fill="none" stroke="#CDE9E8" stroke-width="1.3" stroke-linecap="round"/></g>
+                <g class="bird" style="animation-delay:-6s;animation-duration:18s"><path d="M0 46 q3 -3 6 0 q3 -3 6 0" fill="none" stroke="#CDE9E8" stroke-width="1.1" stroke-linecap="round"/></g>
+                <g class="sun">
+                  <circle class="glow" cx="215" cy="92" r="52" fill="url(#g-sun)"/>
+                  <circle cx="215" cy="92" r="26" fill="#F2C766"/>
+                </g>
+                <rect x="0" y="92" width="300" height="68" fill="url(#g-sea)"/>
+                <g id="waves"></g>
+                <g id="refl"></g>
+                <g id="sparkles"></g>
+                <g class="boat" transform="translate(52 82)"><path d="M0 9 h26 l-4 5 h-18z" fill="#F2F7F6"/><path d="M12 9 v-12 l9 10z" fill="#F5B3C2"/></g>
               </svg>
             </div>
-            <div class="for"><b>Happy Birthday</b><span class="hint">めくる →</span></div>
+            <div class="for"><span class="script">Happy Birthday</span><span class="hint">めくる <b>→</b></span></div>
           </div>
+          <div class="corner"></div>
         </div>
         <div class="face back"></div>
       </article>
@@ -226,8 +358,8 @@ a.chip{color:var(--sea);border-color:var(--sea-soft);background:var(--sea-soft)}
               <li><button data-go="8"><div><b>持ち物とメモ</b><span>チェックリスト</span></div><em>p.8</em></button></li>
             </ol>
             <div class="facts">
-              <div class="fact"><b>23°C</b><span>11月の平均気温</span></div>
-              <div class="fact"><b>24°C</b><span>海水温の目安</span></div>
+              <div class="fact"><b data-count="23" data-suf="°C">23°C</b><span>11月の平均気温</span></div>
+              <div class="fact"><b data-count="24" data-suf="°C">24°C</b><span>海水温の目安</span></div>
               <div class="fact"><b>17:40</b><span>日の入り頃</span></div>
             </div>
           </div>
@@ -242,6 +374,16 @@ a.chip{color:var(--sea);border-color:var(--sea-soft);background:var(--sea-soft)}
           <div class="scroll">
             <div class="eyebrow">Flights</div>
             <h2 class="ptitle">フライト</h2>
+            <div class="sky" aria-hidden="true">
+              <svg viewBox="0 0 300 84" preserveAspectRatio="none">
+                <path id="flightArc" class="arc" d="M18 70 Q150 -18 282 70" fill="none" stroke="var(--sea)" stroke-width="1.4" opacity=".6"/>
+                <circle cx="18" cy="70" r="3.5" fill="var(--sea)"/><circle cx="282" cy="70" r="3.5" fill="var(--coral)"/>
+                <text x="18" y="83" font-size="9" text-anchor="middle" fill="var(--muted)" font-family="DM Mono, monospace">HND</text>
+                <text x="282" y="83" font-size="9" text-anchor="middle" fill="var(--muted)" font-family="DM Mono, monospace">OKA</text>
+                <g><path d="M-7 0 L7 0 M0 0 L-4 -6 M0 0 L-4 6 M-6 0 L-8 -3 M-6 0 L-8 3" stroke="var(--sea)" stroke-width="2" stroke-linecap="round" fill="none"/>
+                  <animateMotion dur="4s" repeatCount="indefinite" rotate="auto" keyPoints="0;1" keyTimes="0;1" calcMode="spline" keySplines=".45 0 .55 1"><mpath href="#flightArc"/></animateMotion></g>
+              </svg>
+            </div>
             <div class="passes">
               <div class="pass">
                 <div class="main">
@@ -296,18 +438,21 @@ a.chip{color:var(--sea);border-color:var(--sea-soft);background:var(--sea-soft)}
             <p class="pick-lead">ホテルからタクシーで行ける本部町の居酒屋。リンクで見て、行きたいお店を「ここにする」。</p>
             <div class="cards" data-group="izakaya">
               <div class="card" data-name="沖縄創作居酒屋 天の川食堂">
+                <span class="heart" aria-hidden="true">♥</span>
                 <div class="letter">A</div>
                 <h4>沖縄創作居酒屋 天の川食堂</h4>
                 <p>本部町大浜。毎晩19:30ごろから島唄ライブ、金曜はお魚の解体ショーも（18:30ごろ）。水曜定休。</p>
                 <div class="row"><a class="btn" href="https://www.google.com/maps/search/?api=1&query=%E6%B2%96%E7%B8%84%E5%89%B5%E4%BD%9C%E5%B1%85%E9%85%92%E5%B1%8B+%E5%A4%A9%E3%81%AE%E5%B7%9D%E9%A3%9F%E5%A0%82+%E6%9C%AC%E9%83%A8%E7%94%BA" target="_blank" rel="noopener">お店を見る ↗</a><button class="btn pick" type="button">ここにする</button></div>
               </div>
               <div class="card" data-name="居酒屋 海">
+                <span class="heart" aria-hidden="true">♥</span>
                 <div class="letter">B</div>
                 <h4>居酒屋 海</h4>
                 <p>地元の居酒屋。お刺身や沖縄料理でゆっくり。</p>
                 <div class="row"><a class="btn" href="https://www.google.com/maps/search/?api=1&query=%E5%B1%85%E9%85%92%E5%B1%8B+%E6%B5%B7+%E6%9C%AC%E9%83%A8%E7%94%BA" target="_blank" rel="noopener">お店を見る ↗</a><button class="btn pick" type="button">ここにする</button></div>
               </div>
               <div class="card" data-name="海を渡った坊's">
+                <span class="heart" aria-hidden="true">♥</span>
                 <div class="letter">C</div>
                 <h4>海を渡った坊's</h4>
                 <p>本部の夜を楽しめるお店。名前からして気になる一軒。</p>
@@ -324,8 +469,9 @@ a.chip{color:var(--sea);border-color:var(--sea-soft);background:var(--sea-soft)}
       <!-- 5 2日目 -->
       <article class="leaf">
         <div class="face front paper-grid">
+          <div class="confetti-bg" id="day2fx" aria-hidden="true"></div>
           <div class="scroll">
-            <div class="dayhead"><div class="num" style="color:var(--coral)"><small>DAY</small>02</div><div><h2 class="ptitle">ケラマの海と誕生日</h2><div class="psub">11月14日（土）</div></div></div>
+            <div class="dayhead"><div class="num bd"><small>DAY</small>02</div><div><h2 class="ptitle">ケラマの海と誕生日</h2><div class="psub">11月14日（土）</div></div></div>
             <span class="pill bd">Birthday</span>
             <ol class="tl">
               <li class="key"><time>06:45</time><div class="body"><h3>ホテル出発</h3><p>朝ごはんはコンビニで。那覇まで約1時間30分。</p></div></li>
@@ -370,18 +516,21 @@ a.chip{color:var(--sea);border-color:var(--sea-soft);background:var(--sea-soft)}
             <p class="pick-lead">13:30ごろ着いて、16:30までの約3時間。どこに行きたい？</p>
             <div class="cards" data-group="detour">
               <div class="card" data-name="国際通り">
+                <span class="heart" aria-hidden="true">♥</span>
                 <div class="letter">A · 那覇</div>
                 <h4>国際通り</h4>
                 <p>食べ歩きとお土産ならここ。お昼ごはんもこの通りで。返却店まで車で約20分。</p>
                 <div class="row"><a class="btn" href="https://www.google.com/maps/search/?api=1&query=%E5%9B%BD%E9%9A%9B%E9%80%9A%E3%82%8A+%E9%82%A3%E8%A6%87" target="_blank" rel="noopener">場所を見る ↗</a><button class="btn pick" type="button">ここにする</button></div>
               </div>
               <div class="card" data-name="首里城公園">
+                <span class="heart" aria-hidden="true">♥</span>
                 <div class="letter">B · 那覇</div>
                 <h4>首里城公園</h4>
                 <p>琉球王国のお城。正殿は復元工事が進んでいて、今しか見られない姿。石畳の坂も雰囲気がいい。</p>
                 <div class="row"><a class="btn" href="https://oki-park.jp/shurijo/" target="_blank" rel="noopener">公式サイト ↗</a><button class="btn pick" type="button">ここにする</button></div>
               </div>
               <div class="card" data-name="アメリカンビレッジ">
+                <span class="heart" aria-hidden="true">♥</span>
                 <div class="letter">C · 北谷</div>
                 <h4>美浜アメリカンビレッジ</h4>
                 <p>海沿いのカラフルな街。カフェ、雑貨、海辺の散歩。ホテルから一番近くて、返却店まで約40分。</p>
@@ -402,6 +551,7 @@ a.chip{color:var(--sea);border-color:var(--sea-soft);background:var(--sea-soft)}
             <div class="eyebrow">Checklist</div>
             <h2 class="ptitle">持ち物とメモ</h2>
             <div class="psub">チェックはこのスマホに保存されます</div>
+            <div class="meter"><i id="meter"></i></div>
             <div class="check" id="check"></div>
             <div class="tips">
               <div class="tip"><span>服装</span><div>昼は半袖でOK。朝晩と船の上は風が冷たいので羽織りを1枚。</div></div>
@@ -417,9 +567,11 @@ a.chip{color:var(--sea);border-color:var(--sea-soft);background:var(--sea-soft)}
       <!-- 9 裏表紙 -->
       <article class="leaf backcover">
         <div class="face front">
-          <div>
-            <div class="msg">Happy Birthday</div>
+          <div id="balloons" aria-hidden="true"></div>
+          <div style="position:relative;z-index:2;padding:0 20px">
+            <div class="bd-text" id="bdText" aria-label="Happy Birthday"></div>
             <p>2026.11.13 – 11.15 · Okinawa</p>
+            <button class="again" type="button" data-go="0">最初から読む</button>
           </div>
         </div>
         <div class="face back"></div>
@@ -428,22 +580,138 @@ a.chip{color:var(--sea);border-color:var(--sea-soft);background:var(--sea-soft)}
   </div>
 
   <div class="bar">
-    <button id="prev" type="button" aria-label="前のページ">‹</button>
-    <div class="count" id="count">表紙</div>
-    <button id="next" type="button" aria-label="次のページ">›</button>
+    <div class="row">
+      <button id="prev" type="button" aria-label="前のページ">‹</button>
+      <div class="count" id="count">表紙</div>
+      <button id="next" type="button" aria-label="次のページ">›</button>
+    </div>
+    <div class="dots" id="dots" aria-hidden="true"></div>
   </div>
 </div>
 
 <script>
+const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+const rand=(a,b)=>a+Math.random()*(b-a);
+const COLORS=["#D24D6B","#E2B95E","#0B6F78","#4FC1C6","#F5B3C2","#FFFFFF"];
+
+// ===== 泡 =====
+(function(){
+  const box=document.getElementById("bubbles");
+  for(let i=0;i<16;i++){
+    const b=document.createElement("span");b.className="bubble";
+    const s=rand(6,22);
+    b.style.cssText=`left:${rand(0,100)}%;width:${s}px;height:${s}px;animation-duration:${rand(10,22)}s;animation-delay:${-rand(0,20)}s;--sway:${rand(-60,60)}px`;
+    box.appendChild(b);
+  }
+})();
+
+// ===== 表紙の海（波・反射・きらめき） =====
+(function(){
+  const ns="http://www.w3.org/2000/svg";
+  const waves=document.getElementById("waves");
+  [[104,"#4FC1C6",.75,"wv1"],[118,"#4FC1C6",.5,"wv2"],[134,"#9FD6D8",.3,"wv3"]].forEach(([y,c,o,cls])=>{
+    let d=`M-50 ${y} q12.5 -5 25 0`;
+    for(let x=0;x<16;x++)d+=" t25 0";
+    const p=document.createElementNS(ns,"path");
+    p.setAttribute("d",d);p.setAttribute("fill","none");p.setAttribute("stroke",c);p.setAttribute("stroke-width","2");p.setAttribute("stroke-linecap","round");p.setAttribute("opacity",o);
+    p.setAttribute("class","wv "+cls);waves.appendChild(p);
+  });
+  const refl=document.getElementById("refl");
+  [[97,70],[103,52],[110,36],[118,22]].forEach(([y,w],i)=>{
+    const r=document.createElementNS(ns,"rect");
+    r.setAttribute("x",215-w/2);r.setAttribute("y",y);r.setAttribute("width",w);r.setAttribute("height",2);r.setAttribute("rx",1);
+    r.setAttribute("fill","#F2C766");r.setAttribute("opacity",.7-i*.12);r.setAttribute("class","refl");r.style.animationDelay=(i*.3)+"s";
+    refl.appendChild(r);
+  });
+  const sp=document.getElementById("sparkles");
+  for(let i=0;i<14;i++){
+    const c=document.createElementNS(ns,"path");
+    const x=rand(10,290),y=rand(98,155),s=rand(1.2,2.6);
+    c.setAttribute("d",`M${x} ${y-s*2} L${x+s*.5} ${y-s*.5} L${x+s*2} ${y} L${x+s*.5} ${y+s*.5} L${x} ${y+s*2} L${x-s*.5} ${y+s*.5} L${x-s*2} ${y} L${x-s*.5} ${y-s*.5}Z`);
+    c.setAttribute("fill","#FFFFFF");c.setAttribute("class","tw");c.style.animationDelay=rand(0,2)+"s";c.style.animationDuration=rand(1.4,2.8)+"s";
+    sp.appendChild(c);
+  }
+  if(reduce)document.querySelectorAll("animateMotion").forEach(a=>a.remove());
+})();
+
+// ===== 裏表紙の文字と風船 =====
+(function(){
+  const t=document.getElementById("bdText");let k=0;
+  "Happy Birthday".split(" ").forEach(word=>{
+    const w=document.createElement("span");w.className="w";
+    [...word].forEach(ch=>{const l=document.createElement("span");l.className="l";l.textContent=ch;l.style.setProperty("--i",k++);w.appendChild(l);});
+    t.appendChild(w);
+  });
+  const bx=document.getElementById("balloons");
+  ["#F5B3C2","#E2B95E","#4FC1C6","#D24D6B","#FFFFFF","#9FD6D8"].forEach((c,i)=>{
+    const b=document.createElement("span");b.className="balloon";
+    b.style.cssText=`left:${8+i*15}%;background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.7),${c} 45%);animation-delay:${-i*1.4}s;animation-duration:${rand(8,12)}s;--sway:${rand(-40,40)}px`;
+    bx.appendChild(b);
+  });
+  const d2=document.getElementById("day2fx");
+  for(let i=0;i<18;i++){
+    const c=document.createElement("i");
+    c.style.cssText=`left:${rand(0,100)}%;background:${COLORS[i%5]};animation-duration:${rand(7,13)}s;animation-delay:${-rand(0,12)}s;--sway:${rand(-40,40)}px`;
+    d2.appendChild(c);
+  }
+})();
+
+// ===== 紙吹雪・花火（canvas） =====
+const fx=document.getElementById("fx"),ctx=fx.getContext("2d");
+let parts=[],running=false;
+function sizeFx(){const r=devicePixelRatio||1;fx.width=innerWidth*r;fx.height=innerHeight*r;ctx.setTransform(r,0,0,r,0,0);}
+sizeFx();addEventListener("resize",sizeFx);
+function burst(x,y,n=60,opt={}){
+  if(reduce)return;
+  for(let i=0;i<n;i++){
+    const a=opt.ring?(i/n)*Math.PI*2:rand(-Math.PI,0)+rand(-.4,.4);
+    const sp=opt.ring?rand(2.5,4.5):rand(4,10);
+    parts.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,g:opt.ring?.05:.22,life:opt.ring?rand(50,80):rand(70,120),age:0,
+      c:opt.color||COLORS[(Math.random()*COLORS.length)|0],s:rand(4,8),r:rand(0,6),vr:rand(-.3,.3),shape:opt.ring?"dot":(Math.random()<.5?"rect":"dot")});
+  }
+  if(!running){running=true;requestAnimationFrame(tick);}
+}
+function tick(){
+  ctx.clearRect(0,0,innerWidth,innerHeight);
+  parts=parts.filter(p=>p.age<p.life);
+  for(const p of parts){
+    p.age++;p.vx*=.985;p.vy=p.vy*.985+p.g;p.x+=p.vx;p.y+=p.vy;p.r+=p.vr;
+    ctx.globalAlpha=Math.max(0,1-p.age/p.life);ctx.fillStyle=p.c;
+    if(p.shape==="rect"){ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.r);ctx.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);ctx.restore();}
+    else{ctx.beginPath();ctx.arc(p.x,p.y,p.s/3,0,Math.PI*2);ctx.fill();}
+  }
+  ctx.globalAlpha=1;
+  if(parts.length)requestAnimationFrame(tick);else running=false;
+}
+let fireTimer=null;
+function fireworks(on){
+  clearInterval(fireTimer);fireTimer=null;
+  if(!on||reduce)return;
+  const shoot=()=>{const r=book.getBoundingClientRect();burst(rand(r.left+30,r.right-30),rand(r.top+40,r.top+r.height*.45),46,{ring:true,color:COLORS[(Math.random()*5)|0]});};
+  shoot();fireTimer=setInterval(shoot,900);
+}
+
+// ===== 入場アニメの対象に印をつける =====
+const STAGGER=".toc li,.facts .fact,.passes .pass,.tl li,.cards .card,.check div,.tips .tip";
+document.querySelectorAll(".scroll").forEach(s=>{
+  let d=0;
+  [...s.children].forEach(ch=>{
+    const items=ch.matches(".toc,.facts,.passes,.tl,.cards,.check,.tips")?[...ch.querySelectorAll(STAGGER)]:[ch];
+    items.forEach(el=>{el.classList.add("rv");el.style.setProperty("--d",d++);});
+  });
+});
+
 // ===== ページめくり =====
+const book=document.getElementById("book");
 const leaves=[...document.querySelectorAll(".leaf")];
 const N=leaves.length;
+const dots=document.getElementById("dots");
+leaves.forEach(()=>dots.appendChild(document.createElement("i")));
 let cur=0;
 function render(){
   leaves.forEach((l,i)=>{
     const flipped=i<cur;
     l.classList.toggle("flipped",flipped);
-    // めくり済みは手前（左）に、未めくりは番号の若い順に上へ
     l.style.zIndex=flipped?i+1:N*2-i;
     l.setAttribute("aria-hidden",i!==cur);
     l.inert=i!==cur;
@@ -451,42 +719,58 @@ function render(){
   document.getElementById("count").textContent=cur===0?"表紙":cur===N-1?"裏表紙":`${cur} / ${N-2}`;
   document.getElementById("prev").disabled=cur===0;
   document.getElementById("next").disabled=cur===N-1;
+  [...dots.children].forEach((d,i)=>d.classList.toggle("on",i===cur));
+}
+function play(leaf){
+  leaf.classList.remove("play");void leaf.offsetWidth;leaf.classList.add("play");
+  leaf.querySelectorAll("[data-count]").forEach(countUp);
+}
+function countUp(el){
+  if(reduce)return;
+  const to=+el.dataset.count,suf=el.dataset.suf||"";const t0=performance.now();
+  const step=t=>{const k=Math.min(1,(t-t0-400)/900);el.textContent=Math.round(to*(k<0?0:1-Math.pow(1-k,3)))+suf;if(k<1)requestAnimationFrame(step);};
+  requestAnimationFrame(step);
 }
 let restTimer;
 function go(n){
   n=Math.max(0,Math.min(N-1,n));
   if(n===cur)return;
-  // めくる間だけ3Dに戻す
-  leaves.forEach(l=>l.classList.remove("rest"));
-  cur=n;render();
+  const fwd=n>cur;
+  leaves.forEach(l=>l.classList.remove("rest","turn-f","turn-b"));
+  // めくれていく紙に陰影
+  if(fwd)for(let i=cur;i<n;i++)leaves[i].classList.add("turn-f");
+  else for(let i=n;i<cur;i++)leaves[i].classList.add("turn-b");
+  cur=n;render();play(leaves[cur]);
+  fireworks(cur===N-1);
   clearTimeout(restTimer);
-  restTimer=setTimeout(()=>{leaves[cur].classList.add("rest");updateMore();},850);
+  restTimer=setTimeout(()=>{
+    leaves.forEach(l=>l.classList.remove("turn-f","turn-b"));
+    leaves[cur].classList.add("rest");updateMore();
+    if(cur===5){const r=book.getBoundingClientRect();burst(r.left+r.width*.3,r.top+70,50);burst(r.right-r.width*.3,r.top+70,50);}
+  },1000);
 }
-// 下に続きがあるページは「つづき」を出す
+document.getElementById("next").onclick=()=>go(cur+1);
+document.getElementById("prev").onclick=()=>go(cur-1);
+document.addEventListener("keydown",e=>{if(e.key==="ArrowRight")go(cur+1);if(e.key==="ArrowLeft")go(cur-1);});
+document.querySelectorAll("[data-go]").forEach(b=>b.addEventListener("click",e=>{e.stopPropagation();go(+b.dataset.go);}));
+leaves[0].addEventListener("click",()=>{if(cur===0)go(1);});
+let sx=0,sy=0;
+book.addEventListener("touchstart",e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY;},{passive:true});
+book.addEventListener("touchend",e=>{
+  const dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;
+  if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)*1.3)go(cur+(dx<0?1:-1));
+},{passive:true});
+
+// ===== 続きの目印 =====
 const scrolls=[...document.querySelectorAll(".scroll")];
 scrolls.forEach(s=>{
-  const m=document.createElement("div");m.className="more";m.textContent="▼ 下につづく";
+  const m=document.createElement("div");m.className="more";m.innerHTML="<span>▼ 下につづく</span>";
   s.parentElement.appendChild(m);s._more=m;
   s.addEventListener("scroll",()=>upd(s),{passive:true});
 });
 function upd(s){s._more.classList.toggle("show",s.scrollHeight-s.clientHeight-s.scrollTop>8);}
 function updateMore(){scrolls.forEach(upd);}
 addEventListener("resize",updateMore);
-document.getElementById("next").onclick=()=>go(cur+1);
-document.getElementById("prev").onclick=()=>go(cur-1);
-document.addEventListener("keydown",e=>{if(e.key==="ArrowRight")go(cur+1);if(e.key==="ArrowLeft")go(cur-1);});
-document.querySelectorAll("[data-go]").forEach(b=>b.addEventListener("click",()=>go(+b.dataset.go)));
-// 表紙はタップでもめくれる
-leaves[0].addEventListener("click",()=>{if(cur===0)go(1);});
-
-// スワイプ（縦スクロールは邪魔しない）
-let sx=0,sy=0;
-const book=document.getElementById("book");
-book.addEventListener("touchstart",e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY;},{passive:true});
-book.addEventListener("touchend",e=>{
-  const dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;
-  if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)*1.3)go(cur+(dx<0?1:-1));
-},{passive:true});
 
 // ===== 保存（この端末だけ） =====
 const store={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
@@ -500,10 +784,16 @@ document.querySelectorAll(".cards").forEach(group=>{
     cards.forEach(c=>{const on=c.dataset.name===name;c.classList.toggle("on",on);c.querySelector(".pick").textContent=on?"ここに決定 ✓":"ここにする";});
     out.textContent=name?`「${name}」に決定！`:"";
   }
-  cards.forEach(c=>c.querySelector(".pick").addEventListener("click",()=>{
+  cards.forEach(c=>c.querySelector(".pick").addEventListener("click",e=>{
     const now=store.get(key,"");
     const name=now===c.dataset.name?"":c.dataset.name;
     store.set(key,name);show(name);
+    if(name){
+      const r=e.currentTarget.getBoundingClientRect();
+      burst(r.left+r.width/2,r.top+r.height/2,70);
+      c.classList.remove("boom");void c.offsetWidth;c.classList.add("boom");
+      out.classList.remove("pop");void out.offsetWidth;out.classList.add("pop");
+    }
   }));
   show(store.get(key,""));
 });
@@ -512,16 +802,24 @@ document.querySelectorAll(".cards").forEach(group=>{
 const items=["水着","ラッシュガード","サンダル","タオル","日焼け止め","酔い止め","サングラス","羽織り","防水スマホケース","運転免許証","モバイルバッテリー","充電ケーブル"];
 const saved=store.get("okinawa-check",{});
 const box=document.getElementById("check");
+const meter=document.getElementById("meter");
+function updMeter(){meter.style.width=(items.filter(n=>saved[n]).length/items.length*100)+"%";}
 items.forEach((name,i)=>{
   const d=document.createElement("div");
+  d.className="rv";d.style.setProperty("--d",4+i);
   d.innerHTML=`<input type="checkbox" id="item-${i}"><label for="item-${i}">${name}</label>`;
   const cb=d.querySelector("input");
   cb.checked=!!saved[name];
-  cb.addEventListener("change",()=>{saved[name]=cb.checked;store.set("okinawa-check",saved);});
+  cb.addEventListener("change",()=>{
+    saved[name]=cb.checked;store.set("okinawa-check",saved);updMeter();
+    if(items.every(n=>saved[n])){const r=book.getBoundingClientRect();burst(r.left+r.width/2,r.top+r.height/2,90);}
+  });
   box.appendChild(d);
 });
+updMeter();
 
 render();
+play(leaves[0]);
 leaves[0].classList.add("rest");
 updateMore();
 if(document.fonts)document.fonts.ready.then(updateMore);
