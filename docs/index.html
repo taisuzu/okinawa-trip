@@ -55,7 +55,14 @@ button{font:inherit;color:inherit}
 .back{transform:rotateY(180deg);background:var(--paper-back);border-radius:12px 4px 4px 12px;box-shadow:inset -18px 0 24px -16px rgba(0,0,0,.18)}
 .front{background:var(--paper);box-shadow:0 1px 2px rgba(10,40,40,.08),0 12px 30px -10px rgba(10,40,40,.28);display:flex;flex-direction:column}
 .front::before{content:"";position:absolute;left:0;top:0;bottom:0;width:22px;background:linear-gradient(90deg,rgba(0,0,0,.10),rgba(0,0,0,0));pointer-events:none;z-index:2}
-.scroll{flex:1;min-height:0;overflow-y:auto;padding:26px 22px 14px 30px;-webkit-overflow-scrolling:touch}
+/* 静止中のページは3Dを外す（iOS Safariは3D要素の中だとスクロールできないため） */
+.leaf.rest{transform-style:flat}
+.leaf.rest .front{backface-visibility:visible;-webkit-backface-visibility:visible}
+.leaf.rest .back{display:none}
+.scroll{flex:1;min-height:0;overflow-y:auto;padding:26px 22px 14px 30px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:pan-y}
+/* 続きがあるときの目印 */
+.more{position:absolute;left:0;right:0;bottom:30px;height:46px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;background:linear-gradient(rgba(251,252,251,0),var(--paper) 75%);font-size:11px;color:var(--sea);letter-spacing:.1em;pointer-events:none;opacity:0;transition:opacity .2s;z-index:3}
+.more.show{opacity:1}
 .folio{flex:0 0 auto;text-align:center;font-family:var(--font-mono);font-size:11px;color:var(--muted);padding:6px 0 12px;letter-spacing:.2em}
 /* 紙の方眼 */
 .paper-grid{background-image:radial-gradient(circle,var(--line) 1px,transparent 1.2px);background-size:18px 18px;background-position:9px 9px}
@@ -445,7 +452,26 @@ function render(){
   document.getElementById("prev").disabled=cur===0;
   document.getElementById("next").disabled=cur===N-1;
 }
-function go(n){cur=Math.max(0,Math.min(N-1,n));render();}
+let restTimer;
+function go(n){
+  n=Math.max(0,Math.min(N-1,n));
+  if(n===cur)return;
+  // めくる間だけ3Dに戻す
+  leaves.forEach(l=>l.classList.remove("rest"));
+  cur=n;render();
+  clearTimeout(restTimer);
+  restTimer=setTimeout(()=>{leaves[cur].classList.add("rest");updateMore();},850);
+}
+// 下に続きがあるページは「つづき」を出す
+const scrolls=[...document.querySelectorAll(".scroll")];
+scrolls.forEach(s=>{
+  const m=document.createElement("div");m.className="more";m.textContent="▼ 下につづく";
+  s.parentElement.appendChild(m);s._more=m;
+  s.addEventListener("scroll",()=>upd(s),{passive:true});
+});
+function upd(s){s._more.classList.toggle("show",s.scrollHeight-s.clientHeight-s.scrollTop>8);}
+function updateMore(){scrolls.forEach(upd);}
+addEventListener("resize",updateMore);
 document.getElementById("next").onclick=()=>go(cur+1);
 document.getElementById("prev").onclick=()=>go(cur-1);
 document.addEventListener("keydown",e=>{if(e.key==="ArrowRight")go(cur+1);if(e.key==="ArrowLeft")go(cur-1);});
@@ -496,6 +522,9 @@ items.forEach((name,i)=>{
 });
 
 render();
+leaves[0].classList.add("rest");
+updateMore();
+if(document.fonts)document.fonts.ready.then(updateMore);
 </script>
 
 </body>
