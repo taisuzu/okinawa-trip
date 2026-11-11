@@ -1,0 +1,502 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>沖縄 旅のしおり</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap">
+<style>
+/* レイアウト: 1冊の小冊子。ページを右から左へめくる。紙面は昼夜共通、机（背景）だけテーマで変える */
+:root{
+  --desk:#DCE7E5;
+  --desk-fg:#3D5655;
+  --paper:#FBFCFB;
+  --paper-back:#EEF2F1;
+  --ink:#16302F;
+  --muted:#5E7473;
+  --line:#D9E4E2;
+  --sea:#0B6F78;
+  --sea-deep:#084950;
+  --sea-soft:#DDEFEE;
+  --coral:#D24D6B;
+  --coral-soft:#FBE6EB;
+  --sand:#E2B95E;
+  --font-display:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Hiragino Sans",sans-serif;
+  --font-body:"Zen Kaku Gothic New","Hiragino Sans","Noto Sans JP",sans-serif;
+  --font-mono:"DM Mono",ui-monospace,"SF Mono",Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){--desk:#0D1B1D;--desk-fg:#9DB7B5;--paper:#F4F6F4;--paper-back:#DCE3E1;color-scheme:dark}
+}
+:root[data-theme="dark"]{--desk:#0D1B1D;--desk-fg:#9DB7B5;--paper:#F4F6F4;--paper-back:#DCE3E1;color-scheme:dark}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--desk);color:var(--ink);font-family:var(--font-body);font-size:14.5px;line-height:1.7;-webkit-font-smoothing:antialiased;overflow:hidden}
+h1,h2,h3,h4{font-family:var(--font-display);text-wrap:balance;margin:0;line-height:1.35}
+a{color:var(--sea)}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--coral);outline-offset:2px;border-radius:6px}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+
+/* 机と本 */
+.app{height:100%;display:flex;flex-direction:column;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px 10px}
+.stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;perspective:2200px}
+.book{position:relative;width:min(100%,460px,calc((100vh - 110px) * 0.68));height:100%;max-height:720px}
+.leaf{position:absolute;inset:0;transform-origin:left center;transform-style:preserve-3d;transition:transform .8s cubic-bezier(.45,.05,.25,1)}
+.leaf.flipped{transform:rotateY(-178deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:4px 12px 12px 4px;overflow:hidden}
+.back{transform:rotateY(180deg);background:var(--paper-back);border-radius:12px 4px 4px 12px;box-shadow:inset -18px 0 24px -16px rgba(0,0,0,.18)}
+.front{background:var(--paper);box-shadow:0 1px 2px rgba(10,40,40,.08),0 12px 30px -10px rgba(10,40,40,.28);display:flex;flex-direction:column}
+.front::before{content:"";position:absolute;left:0;top:0;bottom:0;width:22px;background:linear-gradient(90deg,rgba(0,0,0,.10),rgba(0,0,0,0));pointer-events:none;z-index:2}
+.scroll{flex:1;min-height:0;overflow-y:auto;padding:26px 22px 14px 30px;-webkit-overflow-scrolling:touch}
+.folio{flex:0 0 auto;text-align:center;font-family:var(--font-mono);font-size:11px;color:var(--muted);padding:6px 0 12px;letter-spacing:.2em}
+/* 紙の方眼 */
+.paper-grid{background-image:radial-gradient(circle,var(--line) 1px,transparent 1.2px);background-size:18px 18px;background-position:9px 9px}
+
+/* しおり紐 */
+.ribbon{position:absolute;top:-6px;right:34px;width:14px;height:64px;background:var(--coral);z-index:500;clip-path:polygon(0 0,100% 0,100% 100%,50% 82%,0 100%);box-shadow:0 2px 4px rgba(0,0,0,.2);pointer-events:none}
+
+/* 操作バー */
+.bar{flex:0 0 auto;display:flex;align-items:center;justify-content:center;gap:16px;padding-top:10px;color:var(--desk-fg)}
+.bar button{width:44px;height:44px;border-radius:50%;border:1px solid currentColor;background:transparent;cursor:pointer;font-size:18px;display:grid;place-items:center}
+.bar button:disabled{opacity:.3;cursor:default}
+.bar .count{font-family:var(--font-mono);font-size:13px;min-width:64px;text-align:center;letter-spacing:.08em}
+
+/* ===== 表紙 ===== */
+.cover .front{background:var(--sea-deep);color:#F2F7F6}
+.cover .front::before{background:linear-gradient(90deg,rgba(0,0,0,.35),rgba(0,0,0,0))}
+.cover-in{position:relative;height:100%;padding:34px 28px 28px 38px;display:flex;flex-direction:column}
+.cover .kicker{font-family:var(--font-mono);font-size:11px;letter-spacing:.3em;color:#9FD6D8}
+.cover h1{font-size:clamp(46px,15vw,72px);font-weight:900;margin-top:18px;line-height:1.05;letter-spacing:.04em}
+.cover h1 small{display:block;font-size:.36em;font-weight:700;letter-spacing:.3em;margin-top:14px;color:#CDE9E8}
+.cover .dates{font-family:var(--font-mono);font-size:15px;margin-top:20px;color:#CDE9E8}
+.cover .art{flex:1;min-height:80px;display:flex;align-items:flex-end}
+.cover .art svg{width:100%;height:auto;max-height:100%}
+.cover .for{display:flex;justify-content:space-between;align-items:flex-end;margin-top:14px;font-size:12px;color:#9FD6D8}
+.cover .for b{font-family:var(--font-display);font-size:17px;color:#F5B3C2;font-weight:700}
+.cover .hint{font-size:11px;letter-spacing:.1em}
+
+/* ===== 裏表紙 ===== */
+.backcover .front{background:var(--sea-deep);color:#F2F7F6;align-items:center;justify-content:center;text-align:center}
+.backcover .msg{font-family:var(--font-display);font-size:30px;color:#F5B3C2;font-weight:900}
+.backcover p{color:#CDE9E8;font-size:13px;margin:10px 0 0}
+
+/* ===== 本文共通 ===== */
+.eyebrow{font-family:var(--font-mono);font-size:11px;letter-spacing:.2em;color:var(--sea);text-transform:uppercase}
+.ptitle{font-size:22px;font-weight:900;margin-top:4px}
+.psub{font-size:12.5px;color:var(--muted)}
+.dayhead{display:flex;align-items:flex-end;gap:12px}
+.dayhead .num{font-family:var(--font-mono);font-size:40px;line-height:.9;color:var(--sea)}
+.dayhead .num small{display:block;font-size:10px;letter-spacing:.16em;color:var(--muted);margin-bottom:6px}
+.pill{display:inline-block;font-size:11.5px;padding:1px 10px;border-radius:999px;background:var(--sea-soft);color:var(--sea);margin-top:8px}
+.pill.bd{background:var(--coral-soft);color:var(--coral)}
+
+/* もくじ */
+.toc{list-style:none;margin:18px 0 0;padding:0}
+.toc li{border-bottom:1px dashed var(--line)}
+.toc button{width:100%;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:baseline;background:none;border:0;padding:11px 2px;text-align:left;cursor:pointer}
+.toc b{font-family:var(--font-display);font-size:15.5px}
+.toc span{font-size:12px;color:var(--muted);display:block;font-weight:400}
+.toc em{font-style:normal;font-family:var(--font-mono);font-size:12px;color:var(--sea)}
+.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:20px}
+.fact{border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--paper)}
+.fact b{display:block;font-family:var(--font-mono);font-weight:500;font-size:16px}
+.fact span{font-size:10.5px;color:var(--muted)}
+
+/* 搭乗券 */
+.passes{display:grid;gap:12px;margin-top:16px}
+.pass{display:grid;grid-template-columns:1fr auto;background:var(--paper);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.pass .main{padding:12px 14px;min-width:0}
+.pass .stub{padding:12px;border-left:2px dashed var(--line);display:flex;flex-direction:column;justify-content:center;align-items:center;min-width:76px;text-align:center}
+.pass .tag{font-size:10.5px;letter-spacing:.12em;color:var(--muted)}
+.route{display:flex;align-items:center;gap:8px;margin-top:4px}
+.route .ap{font-family:var(--font-mono);font-size:25px;font-weight:500;line-height:1}
+.route .ap small{display:block;font-family:var(--font-body);font-size:10.5px;color:var(--muted);margin-top:4px}
+.route .arrow{flex:1;height:1px;background:var(--line);position:relative;min-width:18px}
+.route .arrow::after{content:"✈";position:absolute;right:-2px;top:-11px;font-size:13px;color:var(--sea)}
+.times{display:flex;justify-content:space-between;margin-top:8px;font-family:var(--font-mono);font-size:14px}
+.stub .d{font-family:var(--font-mono);font-size:19px;line-height:1.1}
+.stub .w{font-size:10.5px;color:var(--muted)}
+.stub .dur{font-family:var(--font-mono);font-size:11.5px;color:var(--sea);margin-top:6px}
+.note{margin-top:14px;font-size:12.5px;color:var(--muted)}
+
+/* タイムライン */
+.tl{list-style:none;margin:16px 0 0;padding:0;position:relative}
+.tl::before{content:"";position:absolute;left:50px;top:6px;bottom:6px;width:2px;background:var(--line)}
+.tl li{display:grid;grid-template-columns:40px 1fr;gap:20px;padding-bottom:14px;position:relative}
+.tl time{font-family:var(--font-mono);font-size:13px;text-align:right;padding-top:1px}
+.tl li::after{content:"";position:absolute;left:46px;top:7px;width:10px;height:10px;border-radius:50%;background:var(--paper);border:2px solid var(--sea)}
+.tl li.key::after{background:var(--sea)}
+.tl li.bd::after{background:var(--coral);border-color:var(--coral)}
+.tl li.choice::after{border-color:var(--sand);background:var(--sand)}
+.tl .body{min-width:0}
+.tl h3{font-size:15px;font-weight:700}
+.tl p{margin:1px 0 0;color:var(--muted);font-size:12.5px}
+.meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:5px}
+.chip{font-size:11px;padding:1px 8px;border-radius:6px;border:1px solid var(--line);color:var(--muted);text-decoration:none;white-space:nowrap}
+a.chip{color:var(--sea);border-color:var(--sea-soft);background:var(--sea-soft)}
+.chip.gold{border-color:var(--sand);color:var(--ink);background:#FBF3DF}
+.jump{background:none;border:0;padding:0;color:var(--sea);text-decoration:underline;cursor:pointer;font-size:12.5px}
+
+/* えらぶページ */
+.pick-lead{font-size:13px;color:var(--muted);margin-top:8px}
+.cards{display:grid;gap:10px;margin-top:14px}
+.card{position:relative;border:1.5px solid var(--line);border-radius:14px;padding:12px 14px 12px 14px;background:var(--paper);transition:border-color .2s,background .2s}
+.card.on{border-color:var(--coral);background:var(--coral-soft)}
+.card .letter{font-family:var(--font-mono);font-size:11px;color:var(--sea);letter-spacing:.12em}
+.card h4{font-size:16.5px;font-weight:700;margin-top:2px}
+.card p{margin:4px 0 0;font-size:12.5px;color:var(--muted)}
+.card .row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;padding:6px 12px;border-radius:999px;text-decoration:none;cursor:pointer;border:1px solid var(--sea);color:var(--sea);background:transparent}
+.btn.pick{border-color:var(--coral);color:var(--coral)}
+.card.on .btn.pick{background:var(--coral);color:#fff}
+.picked{margin-top:14px;font-size:13px;text-align:center;min-height:1.7em;color:var(--coral);font-family:var(--font-display);font-weight:700}
+
+/* 持ち物 */
+.check{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;margin-top:12px}
+.check div{display:flex;align-items:center;gap:8px;min-width:0}
+.check input{width:18px;height:18px;accent-color:var(--sea);flex:0 0 auto}
+.check label{font-size:13.5px}
+.check input:checked+label{color:var(--muted);text-decoration:line-through}
+.tips{margin-top:18px}
+.tip{display:grid;grid-template-columns:44px 1fr;gap:8px;font-size:12.5px;padding:8px 0;border-top:1px solid var(--line)}
+.tip span{font-size:10.5px;letter-spacing:.1em;color:var(--muted);padding-top:2px}
+
+@media (max-width:380px){.scroll{padding:22px 16px 12px 24px}.check{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){.leaf{transition:none}}
+</style>
+
+<div class="app">
+  <div class="stage">
+    <div class="book" id="book" aria-live="polite">
+      <div class="ribbon" aria-hidden="true"></div>
+
+      <!-- 0 表紙 -->
+      <article class="leaf cover">
+        <div class="face front">
+          <div class="cover-in">
+            <div class="kicker">TRAVEL BOOKLET · No.01</div>
+            <h1>沖縄<small>旅のしおり</small></h1>
+            <div class="dates">2026.11.13 FRI — 11.15 SUN</div>
+            <div class="art">
+              <svg viewBox="0 0 300 150" aria-hidden="true">
+                <circle cx="220" cy="62" r="26" fill="#E2B95E"/>
+                <rect x="0" y="80" width="300" height="70" fill="#0B6F78"/>
+                <path d="M0 80 Q 25 72 50 80 T 100 80 T 150 80 T 200 80 T 250 80 T 300 80 V150 H0Z" fill="#0B6F78"/>
+                <path d="M0 98 Q 25 91 50 98 T 100 98 T 150 98 T 200 98 T 250 98 T 300 98" fill="none" stroke="#4FC1C6" stroke-width="2" stroke-linecap="round" opacity=".7"/>
+                <path d="M0 116 Q 25 109 50 116 T 100 116 T 150 116 T 200 116 T 250 116 T 300 116" fill="none" stroke="#4FC1C6" stroke-width="2" stroke-linecap="round" opacity=".45"/>
+                <path d="M180 82 h80" stroke="#E2B95E" stroke-width="2" opacity=".6"/>
+                <path d="M196 90 h48" stroke="#E2B95E" stroke-width="2" opacity=".4"/>
+                <g fill="#F2F7F6"><path d="M40 70 l14 -3 l-3 3 l10 0 l-4 3 h-14z"/></g>
+              </svg>
+            </div>
+            <div class="for"><b>Happy Birthday</b><span class="hint">めくる →</span></div>
+          </div>
+        </div>
+        <div class="face back"></div>
+      </article>
+
+      <!-- 1 もくじ -->
+      <article class="leaf">
+        <div class="face front paper-grid">
+          <div class="scroll">
+            <div class="eyebrow">Contents</div>
+            <h2 class="ptitle">もくじ</h2>
+            <ol class="toc">
+              <li><button data-go="2"><div><b>フライト</b><span>羽田 ⇄ 那覇</span></div><em>p.2</em></button></li>
+              <li><button data-go="3"><div><b>1日目　美ら海と本部の夜</b><span>11/13 金</span></div><em>p.3</em></button></li>
+              <li><button data-go="4"><div><b>今夜のお店をえらぶ</b><span>居酒屋 3軒から</span></div><em>p.4</em></button></li>
+              <li><button data-go="5"><div><b>2日目　ケラマの海と誕生日</b><span>11/14 土</span></div><em>p.5</em></button></li>
+              <li><button data-go="6"><div><b>3日目　南へドライブ</b><span>11/15 日</span></div><em>p.6</em></button></li>
+              <li><button data-go="7"><div><b>帰りの寄り道をえらぶ</b><span>3か所から</span></div><em>p.7</em></button></li>
+              <li><button data-go="8"><div><b>持ち物とメモ</b><span>チェックリスト</span></div><em>p.8</em></button></li>
+            </ol>
+            <div class="facts">
+              <div class="fact"><b>23°C</b><span>11月の平均気温</span></div>
+              <div class="fact"><b>24°C</b><span>海水温の目安</span></div>
+              <div class="fact"><b>17:40</b><span>日の入り頃</span></div>
+            </div>
+          </div>
+          <div class="folio">— 1 —</div>
+        </div>
+        <div class="face back"></div>
+      </article>
+
+      <!-- 2 フライト -->
+      <article class="leaf">
+        <div class="face front paper-grid">
+          <div class="scroll">
+            <div class="eyebrow">Flights</div>
+            <h2 class="ptitle">フライト</h2>
+            <div class="passes">
+              <div class="pass">
+                <div class="main">
+                  <div class="tag">行き · OUTBOUND</div>
+                  <div class="route"><div class="ap">HND<small>東京 羽田</small></div><div class="arrow"></div><div class="ap">OKA<small>沖縄 那覇</small></div></div>
+                  <div class="times"><span>10:30 発</span><span>13:25 着</span></div>
+                </div>
+                <div class="stub"><div class="d">11/13</div><div class="w">金曜日</div><div class="dur">2h55m</div></div>
+              </div>
+              <div class="pass">
+                <div class="main">
+                  <div class="tag">帰り · RETURN</div>
+                  <div class="route"><div class="ap">OKA<small>沖縄 那覇</small></div><div class="arrow"></div><div class="ap">HND<small>東京 羽田</small></div></div>
+                  <div class="times"><span>18:35 発</span><span>20:50 着</span></div>
+                </div>
+                <div class="stub"><div class="d">11/15</div><div class="w">日曜日</div><div class="dur">2h15m</div></div>
+              </div>
+            </div>
+            <p class="note">レンタカーは BMW。1日目 14:30 に受け取り、3日目 17:00 に返却します。</p>
+          </div>
+          <div class="folio">— 2 —</div>
+        </div>
+        <div class="face back"></div>
+      </article>
+
+      <!-- 3 1日目 -->
+      <article class="leaf">
+        <div class="face front paper-grid">
+          <div class="scroll">
+            <div class="dayhead"><div class="num"><small>DAY</small>01</div><div><h2 class="ptitle">美ら海と本部の夜</h2><div class="psub">11月13日（金）</div></div></div>
+            <span class="pill">空港から北へ一気にドライブ</span>
+            <ol class="tl">
+              <li class="key"><time>13:25</time><div class="body"><h3>那覇空港 到着</h3><p>荷物を受け取ってレンタカー窓口へ。</p></div></li>
+              <li class="key"><time>14:30</time><div class="body"><h3>レンタカー受け取り（BMW）</h3><p>高速で北へ。途中の道の駅 許田でトイレ休憩してもOK。</p></div></li>
+              <li class="key"><time>16:30</time><div class="body"><h3>沖縄美ら海水族館</h3><p>空港から約2時間。16時以降は入館料が割安。ジンベエザメの「黒潮の海」は必見。</p><div class="meta"><a class="chip" href="https://www.google.com/maps/search/?api=1&query=%E6%B2%96%E7%B8%84%E7%BE%8E%E3%82%89%E6%B5%B7%E6%B0%B4%E6%97%8F%E9%A4%A8" target="_blank" rel="noopener">地図</a><span class="chip">18:30閉館（最終入館17:30）</span></div></div></li>
+              <li><time>17:40</time><div class="body"><h3>エメラルドビーチで夕日</h3><p>水族館の隣の海岸。水槽の合間に抜けて日の入りを見る。</p></div></li>
+              <li class="key"><time>18:50</time><div class="body"><h3>ヒルトン沖縄瀬底リゾート</h3><p>水族館から車で約20分。チェックインして着替え。</p><div class="meta"><a class="chip" href="https://www.google.com/maps/search/?api=1&query=%E3%83%92%E3%83%AB%E3%83%88%E3%83%B3%E6%B2%96%E7%B8%84%E7%80%AC%E5%BA%95%E3%83%AA%E3%82%BE%E3%83%BC%E3%83%88" target="_blank" rel="noopener">地図</a></div></div></li>
+              <li class="choice"><time>19:30</time><div class="body"><h3>居酒屋へ（タクシー）</h3><p>お店はえらんでね。<button class="jump" data-go="4">→ p.4 で決める</button></p></div></li>
+            </ol>
+          </div>
+          <div class="folio">— 3 —</div>
+        </div>
+        <div class="face back"></div>
+      </article>
+
+      <!-- 4 居酒屋えらび -->
+      <article class="leaf">
+        <div class="face front paper-grid">
+          <div class="scroll">
+            <div class="eyebrow">Choose · Day 1 Dinner</div>
+            <h2 class="ptitle">今夜のお店をえらぶ</h2>
+            <p class="pick-lead">ホテルからタクシーで行ける本部町の居酒屋。リンクで見て、行きたいお店を「ここにする」。</p>
+            <div class="cards" data-group="izakaya">
+              <div class="card" data-name="沖縄創作居酒屋 天の川食堂">
+                <div class="letter">A</div>
+                <h4>沖縄創作居酒屋 天の川食堂</h4>
+                <p>本部町大浜。毎晩19:30ごろから島唄ライブ、金曜はお魚の解体ショーも（18:30ごろ）。水曜定休。</p>
+                <div class="row"><a class="btn" href="https://www.google.com/maps/search/?api=1&query=%E6%B2%96%E7%B8%84%E5%89%B5%E4%BD%9C%E5%B1%85%E9%85%92%E5%B1%8B+%E5%A4%A9%E3%81%AE%E5%B7%9D%E9%A3%9F%E5%A0%82+%E6%9C%AC%E9%83%A8%E7%94%BA" target="_blank" rel="noopener">お店を見る ↗</a><button class="btn pick" type="button">ここにする</button></div>
+              </div>
+              <div class="card" data-name="居酒屋 海">
+                <div class="letter">B</div>
+                <h4>居酒屋 海</h4>
+                <p>地元の居酒屋。お刺身や沖縄料理でゆっくり。</p>
+                <div class="row"><a class="btn" href="https://www.google.com/maps/search/?api=1&query=%E5%B1%85%E9%85%92%E5%B1%8B+%E6%B5%B7+%E6%9C%AC%E9%83%A8%E7%94%BA" target="_blank" rel="noopener">お店を見る ↗</a><button class="btn pick" type="button">ここにする</button></div>
+              </div>
+              <div class="card" data-name="海を渡った坊's">
+                <div class="letter">C</div>
+                <h4>海を渡った坊's</h4>
+                <p>本部の夜を楽しめるお店。名前からして気になる一軒。</p>
+                <div class="row"><a class="btn" href="https://www.google.com/maps/search/?api=1&query=%E6%B5%B7%E3%82%92%E6%B8%A1%E3%81%A3%E3%81%9F%E5%9D%8A%27s+%E6%9C%AC%E9%83%A8" target="_blank" rel="noopener">お店を見る ↗</a><button class="btn pick" type="button">ここにする</button></div>
+              </div>
+            </div>
+            <div class="picked" data-out="izakaya"></div>
+          </div>
+          <div class="folio">— 4 —</div>
+        </div>
+        <div class="face back"></div>
+      </article>
+
+      <!-- 5 2日目 -->
+      <article class="leaf">
+        <div class="face front paper-grid">
+          <div class="scroll">
+            <div class="dayhead"><div class="num" style="color:var(--coral)"><small>DAY</small>02</div><div><h2 class="ptitle">ケラマの海と誕生日</h2><div class="psub">11月14日（土）</div></div></div>
+            <span class="pill bd">Birthday</span>
+            <ol class="tl">
+              <li class="key"><time>06:45</time><div class="body"><h3>ホテル出発</h3><p>朝ごはんはコンビニで。那覇まで約1時間30分。</p></div></li>
+              <li class="key"><time>08:15</time><div class="body"><h3>那覇港 集合</h3><p>集合場所と駐車場はツアーの案内で確認。</p></div></li>
+              <li class="key"><time>08:30</time><div class="body"><h3>ケラマ諸島 半日ツアー</h3><p>シュノーケリング・パラセーリング・バナナボート。ウミガメに会えるかも。</p><div class="meta"><span class="chip">酔い止めは乗船30分前</span></div></div></li>
+              <li><time>13:30</time><div class="body"><h3>ツアー終了</h3><p>13〜14時ごろ。お腹が空いたら港の近くで軽くお昼。</p></div></li>
+              <li class="key"><time>16:00</time><div class="body"><h3>ホテル到着・シャワー</h3><p>ディナーまで部屋でゆっくり。</p></div></li>
+              <li class="bd"><time>19:00</time><div class="body"><h3>誕生日ディナー</h3><p>ホテルのレストランで。</p></div></li>
+            </ol>
+          </div>
+          <div class="folio">— 5 —</div>
+        </div>
+        <div class="face back"></div>
+      </article>
+
+      <!-- 6 3日目 -->
+      <article class="leaf">
+        <div class="face front paper-grid">
+          <div class="scroll">
+            <div class="dayhead"><div class="num"><small>DAY</small>03</div><div><h2 class="ptitle">南へドライブ</h2><div class="psub">11月15日（日）</div></div></div>
+            <span class="pill">レンタカー返却 17:00</span>
+            <ol class="tl">
+              <li><time>午前</time><div class="body"><h3>ホテルでのんびり</h3><p>朝食とプール、最後の瀬底の海。</p></div></li>
+              <li class="key"><time>12:00</time><div class="body"><h3>チェックアウト</h3><p>高速で那覇方面へ。</p></div></li>
+              <li class="choice"><time>13:30</time><div class="body"><h3>寄り道スポット</h3><p>3か所からえらんでね。<button class="jump" data-go="7">→ p.7 で決める</button></p></div></li>
+              <li><time>16:40</time><div class="body"><h3>給油</h3><p>返却店の近くのガソリンスタンドで。</p></div></li>
+              <li class="key"><time>17:00</time><div class="body"><h3>レンタカー返却</h3><p>送迎で空港へ。お土産は空港でも買える。</p></div></li>
+              <li class="key"><time>18:35</time><div class="body"><h3>那覇空港 出発</h3><p>20:50 羽田着。おつかれさま。</p></div></li>
+            </ol>
+          </div>
+          <div class="folio">— 6 —</div>
+        </div>
+        <div class="face back"></div>
+      </article>
+
+      <!-- 7 寄り道えらび -->
+      <article class="leaf">
+        <div class="face front paper-grid">
+          <div class="scroll">
+            <div class="eyebrow">Choose · Day 3</div>
+            <h2 class="ptitle">帰りの寄り道をえらぶ</h2>
+            <p class="pick-lead">13:30ごろ着いて、16:30までの約3時間。どこに行きたい？</p>
+            <div class="cards" data-group="detour">
+              <div class="card" data-name="国際通り">
+                <div class="letter">A · 那覇</div>
+                <h4>国際通り</h4>
+                <p>食べ歩きとお土産ならここ。お昼ごはんもこの通りで。返却店まで車で約20分。</p>
+                <div class="row"><a class="btn" href="https://www.google.com/maps/search/?api=1&query=%E5%9B%BD%E9%9A%9B%E9%80%9A%E3%82%8A+%E9%82%A3%E8%A6%87" target="_blank" rel="noopener">場所を見る ↗</a><button class="btn pick" type="button">ここにする</button></div>
+              </div>
+              <div class="card" data-name="首里城公園">
+                <div class="letter">B · 那覇</div>
+                <h4>首里城公園</h4>
+                <p>琉球王国のお城。正殿は復元工事が進んでいて、今しか見られない姿。石畳の坂も雰囲気がいい。</p>
+                <div class="row"><a class="btn" href="https://oki-park.jp/shurijo/" target="_blank" rel="noopener">公式サイト ↗</a><button class="btn pick" type="button">ここにする</button></div>
+              </div>
+              <div class="card" data-name="アメリカンビレッジ">
+                <div class="letter">C · 北谷</div>
+                <h4>美浜アメリカンビレッジ</h4>
+                <p>海沿いのカラフルな街。カフェ、雑貨、海辺の散歩。ホテルから一番近くて、返却店まで約40分。</p>
+                <div class="row"><a class="btn" href="https://www.google.com/maps/search/?api=1&query=%E7%BE%8E%E6%B5%9C%E3%82%A2%E3%83%A1%E3%83%AA%E3%82%AB%E3%83%B3%E3%83%93%E3%83%AC%E3%83%83%E3%82%B8" target="_blank" rel="noopener">場所を見る ↗</a><button class="btn pick" type="button">ここにする</button></div>
+              </div>
+            </div>
+            <div class="picked" data-out="detour"></div>
+          </div>
+          <div class="folio">— 7 —</div>
+        </div>
+        <div class="face back"></div>
+      </article>
+
+      <!-- 8 持ち物 -->
+      <article class="leaf">
+        <div class="face front paper-grid">
+          <div class="scroll">
+            <div class="eyebrow">Checklist</div>
+            <h2 class="ptitle">持ち物とメモ</h2>
+            <div class="psub">チェックはこのスマホに保存されます</div>
+            <div class="check" id="check"></div>
+            <div class="tips">
+              <div class="tip"><span>服装</span><div>昼は半袖でOK。朝晩と船の上は風が冷たいので羽織りを1枚。</div></div>
+              <div class="tip"><span>海</span><div>ウェットスーツありで快適。日差しは強いので日焼け止めはしっかり。</div></div>
+              <div class="tip"><span>返却</span><div>ガソリンの返し方（満タン返しか）は受け取り時に確認。</div></div>
+            </div>
+          </div>
+          <div class="folio">— 8 —</div>
+        </div>
+        <div class="face back"></div>
+      </article>
+
+      <!-- 9 裏表紙 -->
+      <article class="leaf backcover">
+        <div class="face front">
+          <div>
+            <div class="msg">Happy Birthday</div>
+            <p>2026.11.13 – 11.15 · Okinawa</p>
+          </div>
+        </div>
+        <div class="face back"></div>
+      </article>
+    </div>
+  </div>
+
+  <div class="bar">
+    <button id="prev" type="button" aria-label="前のページ">‹</button>
+    <div class="count" id="count">表紙</div>
+    <button id="next" type="button" aria-label="次のページ">›</button>
+  </div>
+</div>
+
+<script>
+// ===== ページめくり =====
+const leaves=[...document.querySelectorAll(".leaf")];
+const N=leaves.length;
+let cur=0;
+function render(){
+  leaves.forEach((l,i)=>{
+    const flipped=i<cur;
+    l.classList.toggle("flipped",flipped);
+    // めくり済みは手前（左）に、未めくりは番号の若い順に上へ
+    l.style.zIndex=flipped?i+1:N*2-i;
+    l.setAttribute("aria-hidden",i!==cur);
+    l.inert=i!==cur;
+  });
+  document.getElementById("count").textContent=cur===0?"表紙":cur===N-1?"裏表紙":`${cur} / ${N-2}`;
+  document.getElementById("prev").disabled=cur===0;
+  document.getElementById("next").disabled=cur===N-1;
+}
+function go(n){cur=Math.max(0,Math.min(N-1,n));render();}
+document.getElementById("next").onclick=()=>go(cur+1);
+document.getElementById("prev").onclick=()=>go(cur-1);
+document.addEventListener("keydown",e=>{if(e.key==="ArrowRight")go(cur+1);if(e.key==="ArrowLeft")go(cur-1);});
+document.querySelectorAll("[data-go]").forEach(b=>b.addEventListener("click",()=>go(+b.dataset.go)));
+// 表紙はタップでもめくれる
+leaves[0].addEventListener("click",()=>{if(cur===0)go(1);});
+
+// スワイプ（縦スクロールは邪魔しない）
+let sx=0,sy=0;
+const book=document.getElementById("book");
+book.addEventListener("touchstart",e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY;},{passive:true});
+book.addEventListener("touchend",e=>{
+  const dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;
+  if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)*1.3)go(cur+(dx<0?1:-1));
+},{passive:true});
+
+// ===== 保存（この端末だけ） =====
+const store={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+
+// ===== えらぶ =====
+document.querySelectorAll(".cards").forEach(group=>{
+  const key="okinawa-pick-"+group.dataset.group;
+  const out=document.querySelector(`[data-out="${group.dataset.group}"]`);
+  const cards=[...group.querySelectorAll(".card")];
+  function show(name){
+    cards.forEach(c=>{const on=c.dataset.name===name;c.classList.toggle("on",on);c.querySelector(".pick").textContent=on?"ここに決定 ✓":"ここにする";});
+    out.textContent=name?`「${name}」に決定！`:"";
+  }
+  cards.forEach(c=>c.querySelector(".pick").addEventListener("click",()=>{
+    const now=store.get(key,"");
+    const name=now===c.dataset.name?"":c.dataset.name;
+    store.set(key,name);show(name);
+  }));
+  show(store.get(key,""));
+});
+
+// ===== 持ち物 =====
+const items=["水着","ラッシュガード","サンダル","タオル","日焼け止め","酔い止め","サングラス","羽織り","防水スマホケース","運転免許証","モバイルバッテリー","充電ケーブル"];
+const saved=store.get("okinawa-check",{});
+const box=document.getElementById("check");
+items.forEach((name,i)=>{
+  const d=document.createElement("div");
+  d.innerHTML=`<input type="checkbox" id="item-${i}"><label for="item-${i}">${name}</label>`;
+  const cb=d.querySelector("input");
+  cb.checked=!!saved[name];
+  cb.addEventListener("change",()=>{saved[name]=cb.checked;store.set("okinawa-check",saved);});
+  box.appendChild(d);
+});
+
+render();
+</script>
+
+</body>
+</html>
